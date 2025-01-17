@@ -9,7 +9,6 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { loadConfig } from './config/url-schemes.js';
 import { executeUrlScheme } from './utils/url-scheme-executor.js';
-import { BRIDGE_URL } from './config/constants.js';
 
 class TextwellServer {
   private server: Server;
@@ -81,15 +80,6 @@ class TextwellServer {
             },
             required: ['text']
           }
-        },
-        {
-          name: 'setup-bridge',
-          description: 'Set up Textwell bridge for reading text content',
-          inputSchema: {
-            type: 'object',
-            properties: {},
-            required: []
-          }
         }
       ]
     }));
@@ -133,52 +123,6 @@ class TextwellServer {
               throw new McpError(
                 ErrorCode.InternalError,
                 `Failed to write text: ${error instanceof Error ? error.message : 'Unknown error'}`
-              );
-            }
-          }
-
-          case 'setup-bridge': {
-            this.server.sendLoggingMessage({
-              level: "info",
-              data: `Setting up Textwell bridge with URL: ${BRIDGE_URL}`
-            });
-            
-            // テキスト取得用のアクションを作成
-            const actionSource = `
-              (function() {
-                const text = encodeURIComponent(T.text);
-                T('urlScheme', {
-                  url: \`${BRIDGE_URL}?text=\${text}\`
-                });
-              })();
-            `;
-            
-            // URLSearchParamsを使わず、手動でエンコード
-            const params = {
-              title: encodeURIComponent('Send to Bridge'),
-              source: encodeURIComponent(actionSource),
-              iconTitle: encodeURIComponent('upload'),
-              desc: encodeURIComponent('Send text content to MCP bridge')
-            };
-            
-            const queryString = Object.entries(params)
-              .map(([key, value]) => `${key}=${value}`)
-              .join('&');
-            
-            const url = `${this.config.paths.importAction}?${queryString}`;
-            
-            try {
-              await this.executeUrlScheme(url);
-              return {
-                content: [{
-                  type: 'text',
-                  text: 'Textwell bridge setup completed successfully'
-                }]
-              };
-            } catch (error) {
-              throw new McpError(
-                ErrorCode.InternalError,
-                `Failed to setup bridge: ${error instanceof Error ? error.message : 'Unknown error'}`
               );
             }
           }
