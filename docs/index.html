@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textwell MCP Bridge</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const MCP_SERVER_PORT = 3000; // Default MCP server port
+        
+        const sendToMCP = async (text) => {
+            try {
+                const response = await fetch(`http://localhost:${MCP_SERVER_PORT}/textwell/text`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                
+                if (response.ok) {
+                    document.body.innerHTML = 'Text successfully sent to MCP server';
+                } else {
+                    document.body.innerHTML = 'Failed to send text to MCP server';
+                }
+            } catch (error) {
+                document.body.innerHTML = `Error: ${error.message}`;
+            }
+        };
+
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const text = params.get('text');
+            if (text) {
+                sendToMCP(decodeURIComponent(text));
+            } else {
+                document.body.innerHTML = 'No text provided';
+            }
+        };
+    </script>
+</body>
+</html>
