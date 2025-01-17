@@ -1,101 +1,61 @@
-# Textwell MCP Server
+# Textwell Write Tool (MCP Server)
 
-TextwellとMCP（Model Context Protocol）を統合するためのサーバー実装です。
+A specialized MCP server designed exclusively for writing text to the Textwell application on macOS.
 
-## 必要条件
+## Overview
 
-- [Volta](https://volta.sh) - Node.jsバージョンマネージャー
-- [GitHub Pages](https://pages.github.com/) - テキスト転送用のブリッジページをホスト
+This tool provides a straightforward way to write text to Textwell. 
 
-## セットアップ
+## Features
 
-1. Voltaをインストール（まだの場合）:
+The server provides a single tool: `write-text`
+
+### Write Text Tool
+
+Writes text to Textwell using specified modes:
+
+- **Replace Mode** (default)
+  - Replaces the entire content with new text
+  - Use case: Complete content replacement
+
+- **Insert Mode**
+  - Inserts text at the current cursor position
+  - Use case: Adding content within existing text
+
+- **Add Mode**
+  - Appends text to the end of current content
+  - Use case: Adding new content while preserving existing text
+
+## Limitations
+
+- Write-only operations (no read capabilities)
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js v22.12.0 (managed by Volta)
+- npm v10.9.0 (managed by Volta)
+- macOS (for Textwell integration)
+
+### Installation
+
+1. Clone the repository
 ```bash
-curl https://get.volta.sh | bash
-```
-
-2. プロジェクトをクローン:
-```bash
-git clone <repository-url>
+git clone [repository-url]
 cd textwell-mcp
 ```
 
-Voltaが自動的に正しいバージョンのNode.jsとnpmをインストールします。
-
-3. 依存関係のインストール:
+2. Install dependencies
 ```bash
 npm install
 ```
 
-4. ビルド:
+3. Build the server
 ```bash
 npm run build
 ```
 
-## 開発
+## License
 
-開発サーバーの起動:
-```bash
-npm run dev
-```
-
-## 本番環境
-
-本番環境での実行:
-```bash
-npm start
-```
-
-## GitHub Pagesのセットアップ
-
-1. リポジトリの設定でGitHub Pagesを有効化
-2. `docs/index.html`をブリッジページとして公開
-3. 公開されたURLを使用してTextwell Actionを設定
-
-## MCPツール
-
-### setup-textwell
-
-Textwellにアクションを追加します。
-
-```typescript
-{
-  name: 'setup-textwell',
-  description: 'Set up Textwell with required actions',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      bridgeUrl: {
-        type: 'string',
-        description: 'URL of the GitHub Pages bridge'
-      }
-    },
-    required: ['bridgeUrl']
-  }
-}
-```
-
-### write-text
-
-Textwellにテキストを書き込みます。
-
-```typescript
-{
-  name: 'write-text',
-  description: 'Write text to Textwell',
-  inputSchema: {
-    type: 'object',
-    properties: {
-      text: {
-        type: 'string',
-        description: 'Text to write'
-      },
-      mode: {
-        type: 'string',
-        enum: ['replace', 'insert', 'add'],
-        description: 'How to write - replace all, insert at cursor, or append to end'
-      }
-    },
-    required: ['text']
-  }
-}
+MIT

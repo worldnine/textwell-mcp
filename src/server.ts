@@ -7,14 +7,12 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { loadConfig } from './config/url-schemes.js';
+import { URL_SCHEMES, TIMEOUT } from './config/url-schemes.js';
 import { executeUrlScheme } from './utils/url-scheme-executor.js';
-import { BRIDGE_URL } from './config/constants.js';
 
 class TextwellServer {
   private server: Server;
   private isConnected: boolean = false;
-  private config = loadConfig();
 
   constructor() {
     this.server = new Server(
@@ -52,7 +50,7 @@ class TextwellServer {
     this.ensureConnection();
     
     return executeUrlScheme(url, {
-      timeout: this.config.timeout,
+      timeout: TIMEOUT,
       onLog: (level, message) => {
         this.server.sendLoggingMessage({ level, data: message });
       }
@@ -64,31 +62,22 @@ class TextwellServer {
       tools: [
         {
           name: 'write-text',
-          description: 'Write text to Textwell',
+          description: 'Write text to Textwell application',
           inputSchema: {
             type: 'object',
             properties: {
               text: {
                 type: 'string',
-                description: 'Text to write'
+                description: 'Content to write to Textwell'
               },
               mode: {
                 type: 'string',
                 enum: ['replace', 'insert', 'add'],
-                description: 'How to write - replace all, insert at cursor, or append to end',
+                description: 'replace: overwrite all, insert: at cursor, add: at end',
                 default: 'replace'
               }
             },
             required: ['text']
-          }
-        },
-        {
-          name: 'setup-bridge',
-          description: 'Set up Textwell bridge for reading text content',
-          inputSchema: {
-            type: 'object',
-            properties: {},
-            required: []
           }
         }
       ]
@@ -98,11 +87,6 @@ class TextwellServer {
       this.ensureConnection();
 
       // ツール実行開始時のログ
-      this.server.sendLoggingMessage({
-        level: "info",
-        data: `Executing tool: ${request.params.name}`
-      });
-
       try {
         switch (request.params.name) {
           case 'write-text': {
@@ -111,78 +95,26 @@ class TextwellServer {
               mode?: 'replace' | 'insert' | 'add';
             };
             
-            // パラメータログ
             this.server.sendLoggingMessage({
               level: "info",
-              data: `Writing text with mode: ${mode}`
+              data: `Textwell: ${mode} text`
             });
             
-            // URLスキームの構築
             const encodedText = encodeURIComponent(text);
-            const url = `${this.config.paths[mode]}?text=${encodedText}`;
+            const url = `${URL_SCHEMES[mode]}?text=${encodedText}`;
             
             try {
               await this.executeUrlScheme(url);
               return {
                 content: [{
                   type: 'text',
-                  text: `Text has been ${mode}d successfully`
+                  text: `Text ${mode} completed`
                 }]
               };
             } catch (error) {
               throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to write text: ${error instanceof Error ? error.message : 'Unknown error'}`
-              );
-            }
-          }
-
-          case 'setup-bridge': {
-            this.server.sendLoggingMessage({
-              level: "info",
-              data: `Setting up Textwell bridge with URL: ${BRIDGE_URL}`
-            });
-            
-            // テキスト取得用のアクションを作成
-            const actionSource = `
-              (function() {
-                // 現在のテキストを取得してエンコード
-                const text = encodeURIComponent(T.text);
-                // アクション実行後にClaudeに戻る
-                const callbackUrl = encodeURIComponent(\`textwell:///replace?text=\${text}\`);
-                // URLスキームを実行（x-successパラメータを使用）
-                T('urlScheme', {
-                  url: \`textwell:///add?x-success=\${callbackUrl}\`
-                });
-              })();
-            `;
-            
-            // URLSearchParamsを使わず、手動でエンコード
-            const params = {
-              title: encodeURIComponent('Send to Bridge'),
-              source: encodeURIComponent(actionSource),
-              iconTitle: encodeURIComponent('upload'),
-              desc: encodeURIComponent('Send text content to MCP bridge')
-            };
-            
-            const queryString = Object.entries(params)
-              .map(([key, value]) => `${key}=${value}`)
-              .join('&');
-            
-            const url = `${this.config.paths.importAction}?${queryString}`;
-            
-            try {
-              await this.executeUrlScheme(url);
-              return {
-                content: [{
-                  type: 'text',
-                  text: 'Textwell bridge setup completed successfully'
-                }]
-              };
-            } catch (error) {
-              throw new McpError(
-                ErrorCode.InternalError,
-                `Failed to setup bridge: ${error instanceof Error ? error.message : 'Unknown error'}`
+                `Textwell write failed: ${error instanceof Error ? error.message : 'Unknown error'}`
               );
             }
           }
