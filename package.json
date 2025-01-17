@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "ts-node --esm src/server.ts",
-    "postinstall": "chmod +x dist/server.js"
+    "postinstall": "chmod +x dist/server.js",
+    "test": "npm run build && npx @modelcontextprotocol/inspector node dist/server.js"
   },
   "keywords": [],
   "author": "",
