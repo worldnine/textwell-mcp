@@ -146,9 +146,13 @@ class TextwellServer {
             // テキスト取得用のアクションを作成
             const actionSource = `
               (function() {
+                // 現在のテキストを取得してエンコード
                 const text = encodeURIComponent(T.text);
+                // アクション実行後にClaudeに戻る
+                const callbackUrl = encodeURIComponent(\`textwell:///replace?text=\${text}\`);
+                // URLスキームを実行（x-successパラメータを使用）
                 T('urlScheme', {
-                  url: \`${BRIDGE_URL}?text=\${text}\`
+                  url: \`textwell:///add?x-success=\${callbackUrl}\`
                 });
               })();
             `;
