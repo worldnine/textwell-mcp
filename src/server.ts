@@ -19,30 +19,11 @@ class TextwellServer {
       },
       {
         capabilities: {
-          tools: {
-            'write-text': {
-              description: 'Write text to Textwell',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  text: {
-                    type: 'string',
-                    description: 'Text to write'
-                  },
-                  mode: {
-                    type: 'string',
-                    enum: ['replace', 'insert', 'add'],
-                    description: 'How to write - replace all, insert at cursor, or append to end'
-                  }
-                },
-                required: ['text']
-              }
-            }
-          },
+          tools: {},
           logging: {
             supportedLevels: ['info', 'warning', 'error']
           }
-        },
+        }
       }
     );
 
