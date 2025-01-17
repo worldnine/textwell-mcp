@@ -7,13 +7,12 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { loadConfig } from './config/url-schemes.js';
+import { URL_SCHEMES, TIMEOUT } from './config/url-schemes.js';
 import { executeUrlScheme } from './utils/url-scheme-executor.js';
 
 class TextwellServer {
   private server: Server;
   private isConnected: boolean = false;
-  private config = loadConfig();
 
   constructor() {
     this.server = new Server(
@@ -51,7 +50,7 @@ class TextwellServer {
     this.ensureConnection();
     
     return executeUrlScheme(url, {
-      timeout: this.config.timeout,
+      timeout: TIMEOUT,
       onLog: (level, message) => {
         this.server.sendLoggingMessage({ level, data: message });
       }
@@ -63,18 +62,18 @@ class TextwellServer {
       tools: [
         {
           name: 'write-text',
-          description: 'Write text to Textwell',
+          description: 'Write text to Textwell application',
           inputSchema: {
             type: 'object',
             properties: {
               text: {
                 type: 'string',
-                description: 'Text to write'
+                description: 'Content to write to Textwell'
               },
               mode: {
                 type: 'string',
                 enum: ['replace', 'insert', 'add'],
-                description: 'How to write - replace all, insert at cursor, or append to end',
+                description: 'replace: overwrite all, insert: at cursor, add: at end',
                 default: 'replace'
               }
             },
@@ -88,11 +87,6 @@ class TextwellServer {
       this.ensureConnection();
 
       // ツール実行開始時のログ
-      this.server.sendLoggingMessage({
-        level: "info",
-        data: `Executing tool: ${request.params.name}`
-      });
-
       try {
         switch (request.params.name) {
           case 'write-text': {
@@ -101,28 +95,26 @@ class TextwellServer {
               mode?: 'replace' | 'insert' | 'add';
             };
             
-            // パラメータログ
             this.server.sendLoggingMessage({
               level: "info",
-              data: `Writing text with mode: ${mode}`
+              data: `Textwell: ${mode} text`
             });
             
-            // URLスキームの構築
             const encodedText = encodeURIComponent(text);
-            const url = `${this.config.paths[mode]}?text=${encodedText}`;
+            const url = `${URL_SCHEMES[mode]}?text=${encodedText}`;
             
             try {
               await this.executeUrlScheme(url);
               return {
                 content: [{
                   type: 'text',
-                  text: `Text has been ${mode}d successfully`
+                  text: `Text ${mode} completed`
                 }]
               };
             } catch (error) {
               throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to write text: ${error instanceof Error ? error.message : 'Unknown error'}`
+                `Textwell write failed: ${error instanceof Error ? error.message : 'Unknown error'}`
               );
             }
           }
