@@ -45,10 +45,26 @@ class TextwellServer {
 
   private async executeUrlScheme(url: string): Promise<void> {
     this.ensureConnection();
-    // Note: このメソッドは実際の環境では、システム固有の方法でURL Schemeを実行する必要があります
+    
     this.server.sendLoggingMessage({
       level: "info",
-      data: `Would execute URL scheme: ${url}`
+      data: `Executing URL scheme: ${url}`
+    });
+
+    // macOSの場合、openコマンドでURLスキームを実行
+    const { exec } = await import('child_process');
+    return new Promise((resolve, reject) => {
+      exec(`open "${url}"`, (error) => {
+        if (error) {
+          this.server.sendLoggingMessage({
+            level: "error",
+            data: `Failed to execute URL scheme: ${error.message}`
+          });
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
     });
   }
 
