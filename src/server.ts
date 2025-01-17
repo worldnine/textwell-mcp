@@ -103,10 +103,7 @@ class TextwellServer {
       try {
         switch (request.params.name) {
           case 'setup-textwell': {
-            const { bridgeUrl: baseUrl } = request.params.arguments as { bridgeUrl: string };
-            
-            // GitHub Pagesのベース URL から適切なエンドポイントを構築
-            const bridgeUrl = `${baseUrl.replace(/\/?$/, '')}/bridge`;
+            const { bridgeUrl } = request.params.arguments as { bridgeUrl: string };
             
             // パラメータログ
             this.server.sendLoggingMessage({
@@ -117,9 +114,8 @@ class TextwellServer {
             const actionSource = `
               (function() {
                 const text = encodeURIComponent(T.text);
-                const timestamp = new Date().getTime();
                 T('urlScheme', {
-                  url: \`${bridgeUrl}/?text=\${text}&t=\${timestamp}\`
+                  url: \`${bridgeUrl}?text=\${text}\`
                 });
               })();
             `;
